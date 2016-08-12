@@ -1,0 +1,111 @@
+---
+title: "JHU Statistical Inference Course Course Project Part 2"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Part 2: Basic Inferential Data Analysis Instructions
+
+The Instructions for part 2 of the project are as follows: 
+
+>Now in the second portion of the project, we're going to analyze the ToothGrowth data in the R datasets package.
+
+>1. Load the ToothGrowth data and perform some basic exploratory data analyses
+
+>2. Provide a basic summary of the data.
+
+>3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
+
+>4. State your conclusions and the assumptions needed for your conclusions.
+
+
+### Question 1 & 2
+First off lets load the data and libraries:
+
+```{r constants}
+data("ToothGrowth")
+library(ggplot2)
+```
+
+Lets start by taking a look at the head of the data and a summary to get a feel for what it contains:
+
+```{r exp1}
+head(ToothGrowth)
+summary(ToothGrowth)
+```
+
+The data appears to be contain three columns.  The first is the length of the tooth, the second is the name of a supplement and third is the supplement dosage.
+
+Lets use table to see what the breakdown for the supplement and dosage:
+
+```{r exp2}
+table(ToothGrowth$supp,ToothGrowth$dose)
+```
+
+So we appear to have 3 dosages(0.5,1.0,2.0) for each supplement with 10 samples each.
+
+Next we can use a box plot to get a feel for the relationship between supplement type and dosage to tooth length.
+
+```{r expplot}
+ggplot(ToothGrowth, aes(x=factor(dose), y=len))+
+  facet_grid(.~supp)+xlab(" Dose in milligrams/day")+
+  ylab("Tooth Length")+
+  guides(fill=FALSE)+geom_boxplot()+
+  ggtitle("Tooth Growth vs Supplement Type and Dosage")
+```
+
+### Question 3
+
+Next we are going to perform t-tests to determine if any significant differences exist between the two supplements and within the dosages for each supplement.
+
+
+We will compare supplements at all dosages and perform a t-test to determine if any significant difference exists between them.
+
+```{r testsup}
+t.test(len~supp, data=ToothGrowth)
+```
+
+The t-test returned a p-value of ***0.061***.  For a 95% two-sided significance level we would accept the null hypothesis that there is not a difference in tooth length between the two supplements.
+
+We will next compare the dosages within each supplement to see if any significant differences exist.  First subset the data by supplement and pairs of doses.
+
+```{r testdosesupp}
+vcData12<-subset(ToothGrowth, supp == "VC" & dose != 2)
+vcData13<-subset(ToothGrowth, supp == "VC" & dose != 1)
+vcData23<-subset(ToothGrowth, supp == "VC" & dose != 0.5)
+
+
+
+ojData12<-subset(ToothGrowth, supp == "OJ" & dose != 2)
+ojData13<-subset(ToothGrowth, supp == "OJ" & dose != 1)
+ojData23<-subset(ToothGrowth, supp == "OJ" & dose != 0.5)
+```
+
+Perform t-tests on VC data.
+```{r testdosesupp2}
+t.test(len~dose, data=vcData12)
+t.test(len~dose, data=vcData13)
+t.test(len~dose, data=vcData23)
+```
+
+All the t-tests have p-values < 0.025. For 95% two-sided significance level we reject the null hypotheses and find a significant difference in tooth growth for different doses of supplement VC.
+
+Perform t-tests on OJ data.
+```{r testdosesupp3}
+t.test(len~dose, data=ojData12)
+t.test(len~dose, data=ojData13)
+t.test(len~dose, data=ojData23)
+```
+
+The t-tests comparing 0.5 mg/day to 1.0 mg/day and 0.5 mg/day to 2.0 mg/day have p-values < 0.025.  For 95% two-sided significance level we reject the null hypotheses and find a significant difference in tooth growth for these pairs of doses of supplement OJ.
+
+However, the comparison of 1.0 mg/day to 2.0 mg/day has a p-value > 0.025.  For 95% two-sided significance level we accept the null hypotheses and do not find a significant difference in tooth growth for these doses of supplement OJ.
+
+### Question 4
+For 95% two-sided significance level we failed to reject the null hypothesis that tooth growth between the two supplements in the same.  As a result, no significant difference was found between the two supplements and tooth growth.  This indicates the two supplements did not have statistically significant difference in tooth growth.
+
+Regarding the VC supplement, for 95% two-sided significance level we rejected the null hypotheses for each pairing of supplement dose.  This indicates the dosing levels of VC had statistically significant differences in tooth growth.   
+
+Regarding the OJ supplement, for 95% two-sided significance level we rejected the null hypotheses for each pairing of supplement dose except for 1.0 mg/day and 2.0 mg/day.  This indicates the dosing levels of OJ had statistically significant differences in tooth growth between 0.5 mg/day and 1.0 mg/day and 0.5 mg/day and 2.0 mg/day but not 1.0 mg/day and 2 mg/day.
